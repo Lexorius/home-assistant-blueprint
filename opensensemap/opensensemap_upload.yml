@@ -1,0 +1,580 @@
+blueprint:
+  name: OpenSenseMap Umweltdaten Upload
+  description: >
+    Upload aller Umweltdaten an OpenSenseMap.
+    Alle Sensoren sind optional - nur die benötigten konfigurieren.
+    Gruppiert nach: Basis, Wind, Niederschlag, Solar, Luftqualität, etc.
+    Upload erfolgt alle 5 Minuten.
+  domain: automation
+  author: Home Assistant Community
+
+  input:
+    # === GRUNDKONFIGURATION ===
+    sensebox_id:
+      name: "⚙️ SenseBox ID"
+      description: Die ID deiner SenseBox auf OpenSenseMap (Pflichtfeld)
+      selector:
+        text: {}
+    access_token:
+      name: "🔐 Access Token"
+      description: Dein OpenSenseMap Access Token (Pflichtfeld)
+      selector:
+        text:
+          type: password
+
+    # === BASIS WETTERDATEN ===
+    temperature_sensor:
+      name: "🌡️ Temperatur - HA Sensor"
+      description: "[BASIS] Außentemperatur in °C"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    temperature_id:
+      name: "🌡️ Temperatur - OpenSenseMap ID"
+      description: "[BASIS] Sensor ID für Temperatur"
+      selector:
+        text: {}
+      default: ""
+
+    humidity_sensor:
+      name: "💧 Luftfeuchtigkeit - HA Sensor"
+      description: "[BASIS] Relative Luftfeuchtigkeit in %"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    humidity_id:
+      name: "💧 Luftfeuchtigkeit - OpenSenseMap ID"
+      description: "[BASIS] Sensor ID für Luftfeuchtigkeit"
+      selector:
+        text: {}
+      default: ""
+
+    pressure_sensor:
+      name: "🔵 Luftdruck - HA Sensor"
+      description: "[BASIS] Barometrischer Druck in hPa"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    pressure_id:
+      name: "🔵 Luftdruck - OpenSenseMap ID"
+      description: "[BASIS] Sensor ID für Luftdruck"
+      selector:
+        text: {}
+      default: ""
+
+    dewpoint_sensor:
+      name: "🌡️ Taupunkt - HA Sensor"
+      description: "[BASIS] Taupunkt in °C"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    dewpoint_id:
+      name: "🌡️ Taupunkt - OpenSenseMap ID"
+      description: "[BASIS] Sensor ID für Taupunkt"
+      selector:
+        text: {}
+      default: ""
+
+    # === WIND ===
+    wind_speed_sensor:
+      name: "💨 Windgeschwindigkeit - HA Sensor"
+      description: "[WIND] Durchschnittliche Windgeschwindigkeit in km/h"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    wind_speed_id:
+      name: "💨 Windgeschwindigkeit - OpenSenseMap ID"
+      description: "[WIND] Sensor ID für Windgeschwindigkeit"
+      selector:
+        text: {}
+      default: ""
+
+    wind_gust_sensor:
+      name: "🌪️ Windböen - HA Sensor"
+      description: "[WIND] Maximale Windgeschwindigkeit in km/h"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    wind_gust_id:
+      name: "🌪️ Windböen - OpenSenseMap ID"
+      description: "[WIND] Sensor ID für Windböen"
+      selector:
+        text: {}
+      default: ""
+
+    wind_direction_sensor:
+      name: "🧭 Windrichtung - HA Sensor"
+      description: "[WIND] Windrichtung in Grad (0-360°)"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    wind_direction_id:
+      name: "🧭 Windrichtung - OpenSenseMap ID"
+      description: "[WIND] Sensor ID für Windrichtung"
+      selector:
+        text: {}
+      default: ""
+
+    # === NIEDERSCHLAG ===
+    rain_sensor:
+      name: "🌧️ Niederschlag - HA Sensor"
+      description: "[REGEN] Regenmenge in mm"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    rain_id:
+      name: "🌧️ Niederschlag - OpenSenseMap ID"
+      description: "[REGEN] Sensor ID für Niederschlag"
+      selector:
+        text: {}
+      default: ""
+
+    rain_rate_sensor:
+      name: "🌧️ Regenrate - HA Sensor"
+      description: "[REGEN] Regenintensität in mm/h"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    rain_rate_id:
+      name: "🌧️ Regenrate - OpenSenseMap ID"
+      description: "[REGEN] Sensor ID für Regenrate"
+      selector:
+        text: {}
+      default: ""
+
+    # === UV & SOLAR ===
+    uv_sensor:
+      name: "☀️ UV Index - HA Sensor"
+      description: "[SOLAR] UV Index (0-12+)"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    uv_id:
+      name: "☀️ UV Index - OpenSenseMap ID"
+      description: "[SOLAR] Sensor ID für UV Index"
+      selector:
+        text: {}
+      default: ""
+
+    solar_radiation_sensor:
+      name: "🌞 Solarstrahlung - HA Sensor"
+      description: "[SOLAR] Sonneneinstrahlung in W/m²"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    solar_radiation_id:
+      name: "🌞 Solarstrahlung - OpenSenseMap ID"
+      description: "[SOLAR] Sensor ID für Solarstrahlung"
+      selector:
+        text: {}
+      default: ""
+
+    illuminance_sensor:
+      name: "💡 Beleuchtungsstärke - HA Sensor"
+      description: "[SOLAR] Helligkeit in Lux"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    illuminance_id:
+      name: "💡 Beleuchtungsstärke - OpenSenseMap ID"
+      description: "[SOLAR] Sensor ID für Beleuchtungsstärke"
+      selector:
+        text: {}
+      default: ""
+
+    # === LUFTQUALITÄT ===
+    pm1_sensor:
+      name: "🌫️ PM1 - HA Sensor"
+      description: "[LUFTQUALITÄT] Feinstaub < 1µm in µg/m³"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    pm1_id:
+      name: "🌫️ PM1 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für PM1"
+      selector:
+        text: {}
+      default: ""
+
+    pm25_sensor:
+      name: "🌫️ PM2.5 - HA Sensor"
+      description: "[LUFTQUALITÄT] Feinstaub < 2.5µm in µg/m³"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    pm25_id:
+      name: "🌫️ PM2.5 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für PM2.5"
+      selector:
+        text: {}
+      default: ""
+
+    pm10_sensor:
+      name: "🌫️ PM10 - HA Sensor"
+      description: "[LUFTQUALITÄT] Feinstaub < 10µm in µg/m³"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    pm10_id:
+      name: "🌫️ PM10 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für PM10"
+      selector:
+        text: {}
+      default: ""
+
+    co2_sensor:
+      name: "🫧 CO2 - HA Sensor"
+      description: "[LUFTQUALITÄT] Kohlendioxid in ppm"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    co2_id:
+      name: "🫧 CO2 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für CO2"
+      selector:
+        text: {}
+      default: ""
+
+    co_sensor:
+      name: "⚠️ CO - HA Sensor"
+      description: "[LUFTQUALITÄT] Kohlenmonoxid in ppm"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    co_id:
+      name: "⚠️ CO - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für CO"
+      selector:
+        text: {}
+      default: ""
+
+    voc_sensor:
+      name: "🧪 VOC - HA Sensor"
+      description: "[LUFTQUALITÄT] Flüchtige organische Verbindungen in ppb"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    voc_id:
+      name: "🧪 VOC - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für VOC"
+      selector:
+        text: {}
+      default: ""
+
+    no2_sensor:
+      name: "⚗️ NO2 - HA Sensor"
+      description: "[LUFTQUALITÄT] Stickstoffdioxid in µg/m³"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    no2_id:
+      name: "⚗️ NO2 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für NO2"
+      selector:
+        text: {}
+      default: ""
+
+    o3_sensor:
+      name: "🔵 O3 Ozon - HA Sensor"
+      description: "[LUFTQUALITÄT] Ozon in µg/m³"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    o3_id:
+      name: "🔵 O3 - OpenSenseMap ID"
+      description: "[LUFTQUALITÄT] Sensor ID für O3"
+      selector:
+        text: {}
+      default: ""
+
+    # === LÄRM ===
+    noise_sensor:
+      name: "🔊 Lautstärke - HA Sensor"
+      description: "[LÄRM] Geräuschpegel in dB"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    noise_id:
+      name: "🔊 Lautstärke - OpenSenseMap ID"
+      description: "[LÄRM] Sensor ID für Lautstärke"
+      selector:
+        text: {}
+      default: ""
+
+    # === BODEN ===
+    soil_temperature_sensor:
+      name: "🌱 Bodentemperatur - HA Sensor"
+      description: "[BODEN] Temperatur im Erdreich in °C"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    soil_temperature_id:
+      name: "🌱 Bodentemperatur - OpenSenseMap ID"
+      description: "[BODEN] Sensor ID für Bodentemperatur"
+      selector:
+        text: {}
+      default: ""
+
+    soil_moisture_sensor:
+      name: "💧 Bodenfeuchte - HA Sensor"
+      description: "[BODEN] Feuchtigkeit im Erdreich in %"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    soil_moisture_id:
+      name: "💧 Bodenfeuchte - OpenSenseMap ID"
+      description: "[BODEN] Sensor ID für Bodenfeuchte"
+      selector:
+        text: {}
+      default: ""
+
+    # === SYSTEM ===
+    battery_sensor:
+      name: "🔋 Batterie - HA Sensor"
+      description: "[SYSTEM] Batteriestatus in %"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    battery_id:
+      name: "🔋 Batterie - OpenSenseMap ID"
+      description: "[SYSTEM] Sensor ID für Batterie"
+      selector:
+        text: {}
+      default: ""
+
+    rssi_sensor:
+      name: "📶 Signalstärke - HA Sensor"
+      description: "[SYSTEM] RSSI in dBm"
+      selector:
+        entity:
+          domain: sensor
+      default: []
+    rssi_id:
+      name: "📶 RSSI - OpenSenseMap ID"
+      description: "[SYSTEM] Sensor ID für Signalstärke"
+      selector:
+        text: {}
+      default: ""
+
+    # === OPTIONEN ===
+    enable_validation:
+      name: "✅ Datenvalidierung aktivieren"
+      description: Prüft Sensordaten auf Plausibilität vor Upload
+      selector:
+        boolean: {}
+      default: true
+
+    enable_debug:
+      name: "🐛 Debug-Modus"
+      description: Erweiterte Logs für Fehlersuche
+      selector:
+        boolean: {}
+      default: false
+
+mode: single
+
+variables:
+  # Alle Input-Werte in Variablen speichern
+  box_id: !input sensebox_id
+  token: !input access_token
+  validate: !input enable_validation
+  debug: !input enable_debug
+
+  # Sensoren
+  temp_sensor: !input temperature_sensor
+  temp_id: !input temperature_id
+  humi_sensor: !input humidity_sensor
+  humi_id: !input humidity_id
+  pres_sensor: !input pressure_sensor
+  pres_id: !input pressure_id
+  dew_sensor: !input dewpoint_sensor
+  dew_id: !input dewpoint_id
+  wind_sensor: !input wind_speed_sensor
+  wind_id: !input wind_speed_id
+  gust_sensor: !input wind_gust_sensor
+  gust_id: !input wind_gust_id
+  wdir_sensor: !input wind_direction_sensor
+  wdir_id: !input wind_direction_id
+  rain_sensor: !input rain_sensor
+  rain_id: !input rain_id
+  rain_rate_sensor: !input rain_rate_sensor
+  rain_rate_id: !input rain_rate_id
+  uv_sensor: !input uv_sensor
+  uv_id: !input uv_id
+  solar_sensor: !input solar_radiation_sensor
+  solar_id: !input solar_radiation_id
+  lux_sensor: !input illuminance_sensor
+  lux_id: !input illuminance_id
+  pm1_sensor: !input pm1_sensor
+  pm1_id: !input pm1_id
+  pm25_sensor: !input pm25_sensor
+  pm25_id: !input pm25_id
+  pm10_sensor: !input pm10_sensor
+  pm10_id: !input pm10_id
+  co2_sensor: !input co2_sensor
+  co2_id: !input co2_id
+  co_sensor: !input co_sensor
+  co_id: !input co_id
+  voc_sensor: !input voc_sensor
+  voc_id: !input voc_id
+  no2_sensor: !input no2_sensor
+  no2_id: !input no2_id
+  o3_sensor: !input o3_sensor
+  o3_id: !input o3_id
+  noise_sensor: !input noise_sensor
+  noise_id: !input noise_id
+  soil_temp_sensor: !input soil_temperature_sensor
+  soil_temp_id: !input soil_temperature_id
+  soil_moist_sensor: !input soil_moisture_sensor
+  soil_moist_id: !input soil_moisture_id
+  bat_sensor: !input battery_sensor
+  bat_id: !input battery_id
+  rssi_sensor: !input rssi_sensor
+  rssi_id: !input rssi_id
+
+trigger:
+  - platform: time_pattern
+    minutes: "/5"  # Upload alle 5 Minuten
+
+condition: []
+
+action:
+  # Payload erstellen
+  - variables:
+      payload_data: >
+        {% set data = {} %}
+
+        {% if temp_sensor and temp_id and states(temp_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{temp_id: states(temp_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if humi_sensor and humi_id and states(humi_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{humi_id: states(humi_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if pres_sensor and pres_id and states(pres_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{pres_id: states(pres_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if dew_sensor and dew_id and states(dew_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{dew_id: states(dew_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if wind_sensor and wind_id and states(wind_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{wind_id: states(wind_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if gust_sensor and gust_id and states(gust_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{gust_id: states(gust_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if wdir_sensor and wdir_id and states(wdir_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{wdir_id: states(wdir_sensor) | int}) %}
+        {% endif %}
+        {% if rain_sensor and rain_id and states(rain_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{rain_id: states(rain_sensor) | float(0) | round(1)}) %}
+        {% endif %}
+        {% if rain_rate_sensor and rain_rate_id and states(rain_rate_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{rain_rate_id: states(rain_rate_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if uv_sensor and uv_id and states(uv_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{uv_id: states(uv_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if solar_sensor and solar_id and states(solar_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{solar_id: states(solar_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if lux_sensor and lux_id and states(lux_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{lux_id: states(lux_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if pm1_sensor and pm1_id and states(pm1_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{pm1_id: states(pm1_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if pm25_sensor and pm25_id and states(pm25_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{pm25_id: states(pm25_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if pm10_sensor and pm10_id and states(pm10_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{pm10_id: states(pm10_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if co2_sensor and co2_id and states(co2_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{co2_id: states(co2_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if co_sensor and co_id and states(co_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{co_id: states(co_sensor) | float | round(2)}) %}
+        {% endif %}
+        {% if voc_sensor and voc_id and states(voc_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{voc_id: states(voc_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if no2_sensor and no2_id and states(no2_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{no2_id: states(no2_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if o3_sensor and o3_id and states(o3_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{o3_id: states(o3_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if noise_sensor and noise_id and states(noise_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{noise_id: states(noise_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if soil_temp_sensor and soil_temp_id and states(soil_temp_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{soil_temp_id: states(soil_temp_sensor) | float | round(1)}) %}
+        {% endif %}
+        {% if soil_moist_sensor and soil_moist_id and states(soil_moist_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{soil_moist_id: states(soil_moist_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if bat_sensor and bat_id and states(bat_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{bat_id: states(bat_sensor) | float | round(0)}) %}
+        {% endif %}
+        {% if rssi_sensor and rssi_id and states(rssi_sensor) not in ['unknown', 'unavailable', 'none'] %}
+          {% set data = dict(data, **{rssi_id: states(rssi_sensor) | float | round(0)}) %}
+        {% endif %}
+
+        {{ data | tojson }}
+
+  # Nur senden wenn Daten vorhanden
+  - condition: template
+    value_template: "{{ payload_data != '{}' }}"
+
+  # Debug Logging
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ debug }}"
+        sequence:
+          - service: system_log.write
+            data:
+              message: >
+                OpenSenseMap Upload Debug:
+                Box: {{ box_id }}
+                Payload: {{ payload_data }}
+              level: info
+
+  # HTTP POST via REST-Command (separat in configuration.yaml definieren)
+  - service: rest_command.opensensemap_upload
+    data:
+      url: "https://api.opensensemap.org/boxes/{{ box_id }}/data"
+      token: "{{ token }}"
+      payload: "{{ payload_data }}"
+
+  # Logging
+  - service: logbook.log
+    data:
+      name: OpenSenseMap
+      message: >
+        {% set count = (payload_data | from_json) | length %}
+        Upload: {{ count }} Sensor(en)
