@@ -1,6 +1,6 @@
 # Speicherort: config/blueprints/script/broadcast_benachrichtigung.yaml
 # Danach in Home Assistant unter Einstellungen > Automationen & Szenen >
-# Blueprints sichtbar. Daraus ein Skript erstellen und die Ziele eintragen.
+# Blueprints sichtbar. Daraus ein Skript erstellen, Ziele + Standardtext setzen.
 
 blueprint:
   name: Broadcast-Benachrichtigung
@@ -8,8 +8,9 @@ blueprint:
     Sendet einen Text gleichzeitig an mehrere Benachrichtigungsziele
     (Handys, Telegram, persistente Benachrichtigung usw.).
 
-    Erstellt ein wiederverwendbares Skript, das du aus jeder Automation
-    oder per Service-Aufruf mit beliebiger Nachricht aufrufen kannst.
+    Es gibt einen fest hinterlegten Standardtext. Wird beim Aufruf des
+    Skripts ein eigener Text uebergeben, hat dieser Vorrang und der
+    Standardtext wird ignoriert.
   domain: script
   author: Claude
   input:
@@ -17,7 +18,7 @@ blueprint:
       name: Benachrichtigungsziele
       description: >
         Die Notify-Dienste, an die gesendet werden soll - EINER PRO ZEILE,
-        ohne fuehrendes "notify." weglassen (also komplett mit "notify.").
+        komplett mit fuehrendem "notify.".
 
         Beispiele:
         notify.mobile_app_pixel_max
@@ -27,21 +28,39 @@ blueprint:
       selector:
         text:
           multiline: true
+    standard_text:
+      name: Standardtext
+      description: >
+        Fest hinterlegter Text. Wird gesendet, wenn beim Aufruf des
+        Skripts kein eigener Text uebergeben wird.
+      default: "Benachrichtigung"
+      selector:
+        text:
+          multiline: true
+    standard_titel:
+      name: Standardtitel
+      description: Fest hinterlegter Titel (optional).
+      default: ""
+      selector:
+        text:
 
 mode: parallel
 max: 25
 
 fields:
   message:
-    name: Nachricht
-    description: Der zu sendende Text.
-    required: true
+    name: Nachricht (optional)
+    description: >
+      Eigener Text. Wenn gesetzt, ueberschreibt er den Standardtext.
+      Leer lassen, um den Standardtext zu verwenden.
+    required: false
     selector:
       text:
         multiline: true
   title:
-    name: Titel
-    description: Optionaler Titel der Benachrichtigung.
+    name: Titel (optional)
+    description: >
+      Eigener Titel. Wenn gesetzt, ueberschreibt er den Standardtitel.
     required: false
     selector:
       text:
@@ -59,6 +78,12 @@ sequence:
       ziele_raw: !input benachrichtigungsziele
       ziele: >
         {{ ziele_raw.split('\n') | map('trim') | reject('eq', '') | list }}
+      vorgabe_text: !input standard_text
+      vorgabe_titel: !input standard_titel
+      text: >
+        {{ message if message is defined and message else vorgabe_text }}
+      betreff: >
+        {{ title if title is defined and title else vorgabe_titel }}
   - repeat:
       for_each: "{{ ziele }}"
       sequence:
@@ -66,7 +91,7 @@ sequence:
           continue_on_error: true
           data: >
             {{
-              {'message': message}
-              | combine({'title': title} if title is defined and title else {})
+              {'message': text}
+              | combine({'title': betreff} if betreff else {})
               | combine({'data': extra_data} if extra_data is defined and extra_data else {})
             }}
