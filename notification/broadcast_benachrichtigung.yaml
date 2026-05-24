@@ -1,0 +1,72 @@
+# Speicherort: config/blueprints/script/broadcast_benachrichtigung.yaml
+# Danach in Home Assistant unter Einstellungen > Automationen & Szenen >
+# Blueprints sichtbar. Daraus ein Skript erstellen und die Ziele eintragen.
+
+blueprint:
+  name: Broadcast-Benachrichtigung
+  description: >
+    Sendet einen Text gleichzeitig an mehrere Benachrichtigungsziele
+    (Handys, Telegram, persistente Benachrichtigung usw.).
+
+    Erstellt ein wiederverwendbares Skript, das du aus jeder Automation
+    oder per Service-Aufruf mit beliebiger Nachricht aufrufen kannst.
+  domain: script
+  author: Claude
+  input:
+    benachrichtigungsziele:
+      name: Benachrichtigungsziele
+      description: >
+        Die Notify-Dienste, an die gesendet werden soll - EINER PRO ZEILE,
+        ohne fuehrendes "notify." weglassen (also komplett mit "notify.").
+
+        Beispiele:
+        notify.mobile_app_pixel_max
+        notify.mobile_app_iphone_anna
+        notify.telegram
+        notify.persistent_notification
+      selector:
+        text:
+          multiline: true
+
+mode: parallel
+max: 25
+
+fields:
+  message:
+    name: Nachricht
+    description: Der zu sendende Text.
+    required: true
+    selector:
+      text:
+        multiline: true
+  title:
+    name: Titel
+    description: Optionaler Titel der Benachrichtigung.
+    required: false
+    selector:
+      text:
+  extra_data:
+    name: Zusatzdaten (data)
+    description: >
+      Optionale dienstspezifische Daten, z. B. fuer Bilder oder
+      Aktions-Buttons der Mobile-App. Als YAML-Objekt angeben.
+    required: false
+    selector:
+      object:
+
+sequence:
+  - variables:
+      ziele_raw: !input benachrichtigungsziele
+      ziele: >
+        {{ ziele_raw.split('\n') | map('trim') | reject('eq', '') | list }}
+  - repeat:
+      for_each: "{{ ziele }}"
+      sequence:
+        - service: "{{ repeat.item }}"
+          continue_on_error: true
+          data: >
+            {{
+              {'message': message}
+              | combine({'title': title} if title is defined and title else {})
+              | combine({'data': extra_data} if extra_data is defined and extra_data else {})
+            }}
